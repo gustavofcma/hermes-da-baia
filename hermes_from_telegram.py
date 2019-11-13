@@ -10,7 +10,7 @@ WEBHOOK_ID = config('WEBHOOK_ID')
 WEBHOOK_TOKEN = config('WEBHOOK_TOKEN')
 GROUP_ID = config('BAIA_ID', default=0, cast=int)
 
-discord_webhook = Webhook.partial(WEBHOOK_ID, WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
+# discord_webhook = Webhook.partial(WEBHOOK_ID, WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
 
 
 async def resolve_mentions(mensagem):
@@ -31,10 +31,15 @@ async def resolve_mentions(mensagem):
 
     return mensagem
 
+async def resolve_author(mensagem):
+    pass
+
 
 async def handle(msg):
     chat_id = msg['chat']['id']
     autor = msg['from']
+    autor_id = autor['id']
+    autor_baia_id = from_telegram[autor_id]
 
     if chat_id != GROUP_ID or autor['is_bot']:
         return
@@ -42,17 +47,24 @@ async def handle(msg):
     if 'text' not in msg.keys():
         sorry = f'Parece que o {autor["first_name"]} mandou algo lá no Telegram.\n'
         sorry += 'Infelizmente ainda não sei ler as figura.'
+        discord_webhook = Webhook.partial(config('00_WEBHOOK_ID'), config('00_WEBHOOK_TOKEN'),
+                                          adapter=RequestsWebhookAdapter())
         discord_webhook.send(sorry)
+        del discord_webhook
         return
 
     if 'entities' in msg.keys():
         msg = await resolve_mentions(msg)
     full_msg = msg['text']
 
-    embed = Embed(description=full_msg)
-    embed.set_author(name=f'{autor["first_name"]} {autor["last_name"]}')
+    # embed = Embed(description=full_msg)
+    # embed.set_author(name=f'{autor["first_name"]} {autor["last_name"]}')
 
-    discord_webhook.send(embed=embed)
+    discord_webhook = Webhook.partial(config(f'{autor_baia_id}_WEBHOOK_ID'), config(f'{autor_baia_id}_WEBHOOK_TOKEN'),
+                                      adapter=RequestsWebhookAdapter())
+    # discord_webhook.send(embed=embed)
+    discord_webhook.send(full_msg)
+    del discord_webhook
 
 telegram_bot = telepot.aio.Bot(TELEGRAM_TOKEN)
 loop = asyncio.get_event_loop()
