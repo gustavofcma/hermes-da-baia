@@ -10,7 +10,6 @@ WEBHOOK_ID = config('WEBHOOK_ID')
 WEBHOOK_TOKEN = config('WEBHOOK_TOKEN')
 GROUP_ID = config('BAIA_ID', default=0, cast=int)
 
-# discord_webhook = Webhook.partial(WEBHOOK_ID, WEBHOOK_TOKEN, adapter=RequestsWebhookAdapter())
 discord_webhook = {}
 for i in range(len(users)):
     discord_webhook[f'{i:02d}'] = Webhook.partial(config(f'{i:02d}_WEBHOOK_ID'), config(f'{i:02d}_WEBHOOK_TOKEN'), 
@@ -34,6 +33,7 @@ async def resolve_mentions(mensagem):
         mensagem['text'] = mensagem['text'].replace(item[0], item[1], 1)
 
     return mensagem
+
 
 async def resolve_author(mensagem):
     pass
@@ -59,12 +59,6 @@ async def handle(msg):
         msg = await resolve_mentions(msg)
     full_msg = msg['text']
 
-    # embed = Embed(description=full_msg)
-    # embed.set_author(name=f'{autor["first_name"]} {autor["last_name"]}')
-
-    # discord_webhook = Webhook.partial(config(f'{autor_baia_id}_WEBHOOK_ID'), config(f'{autor_baia_id}_WEBHOOK_TOKEN'),
-                                      adapter=RequestsWebhookAdapter())
-    # discord_webhook.send(embed=embed)
     discord_webhook[autor_baia_id].send(full_msg)
 
 
